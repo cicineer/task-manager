@@ -1,60 +1,34 @@
-const mongoose = require('mongoose'),
-    ObjectId = mongoose.Types.ObjectId,
-    Schema = mongoose.Schema;
+const express = require('express');
+const app = express();
+const cors = require('cors');
+const jwtAuth = require('./jwt');
 
-const UserSchema = new Schema({
-    name: {type: String, required: true},
-    avatar: {type: String, required: true},
-    email: {type: String, required: true},
-    dateOfBirth: {type: Date, required: true},
-    password: {type: String, select: false, required: true},
-    projects: [{type: ObjectId, ref: 'Project', default: []}]
-});
+const userRouter = require('./routes/user');
+const projectRouter = require('./routes/project');
+const authRouter = require('./routes/auth');
+const taskListRouter = require('./routes/task-list');
+const taskRouter = require('./routes/task');
+// mongoose configuration
+const mongoose = require('mongoose');
+//Set up default mongoose connection
+const mongoDB = 'mongodb://127.0.0.1/angular_taskmgr';
+mongoose.connect(mongoDB, {useNewUrlParser: true});
+// Get Mongoose to use the global promise library
+mongoose.Promise = global.Promise;
+//Get the default connection
+const db = mongoose.connection;
+//Bind connection to error event (to get notification of connection errors)
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
-// define hook when a user gets removed, the project user lists will rem
-UserSchema.pre('remove', function() {
-    const user = this;
-    user.model('Project').update(
-        {users: user._id},
-        {$pull: {users: user._id}},
-        {multi: true},
-        next
-    );
-});
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({extended: false}));
+app.use(jwtAuth);
 
-const User = mongoose.model('User', UserSchema);
+app.use('/auth', authRouter);
+app.use('/users', userRouter);
+app.use('/projects', projectRouter);
+app.use('/tasks', taskRouter);
+app.use('/task-lists', taskListRouter);
 
-const ProjectSchema = new Schema({
-    name: {type: String, required: true},
-    desc: {type: String, required: true},
-    coverImg: {type: String, required: true},
-    users: [{type: Schema.Types.ObjectId, ref: 'User', default: []}],
-    taskLists: [{type: Schema.Types.ObjectId, ref: 'TaskList', default: []}]
-});
-
-ProjectSchema.pre('remove', function() {
-    const project = this;
-    project.model('User').update(
-        {projects: project._id},
-        {$pull: {projects: project._id}},
-        {multi: true},
-        next
-    )
-});
-
-ProjectSchema.pre('remove', function() {
-    const project = this;
-    project.model('TaskList').update(
-        {projects: project._id},
-        {$pull: {projects: project._id}},
-        {multi: true},
-        next
-    )
-});
-
-const Project = mongoose.model('Project', ProjectSchema);
-module.exports = {
-    User: User,
-    Project: Project
-};
-
+app.listen('3000');
