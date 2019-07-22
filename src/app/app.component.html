@@ -1,0 +1,19 @@
+<div class="site" [class.myapp-dark-theme]="darkTheme">
+  <header>
+    <app-header (toggle)="sidenav.toggle()" (toggleDarkTheme)="switchTheme($event)"></app-header>
+  </header>
+  <main>
+    <mat-sidenav-container>
+      <mat-sidenav mode="side" opened #sidenav>
+        <app-sidebar></app-sidebar>
+      </mat-sidenav>
+      <mat-sidenav-content>
+        content
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </main>
+  <footer>
+    <app-footer></app-footer>
+  </footer>
+</div>
+

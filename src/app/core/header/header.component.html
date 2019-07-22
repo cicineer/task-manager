@@ -1,0 +1,9 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button (click)="openSideBar()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Task Manager</span>
+  <span class="fill-remaining-spaces"></span>
+  <mat-slide-toggle (change)="onChange($event.checked)">Night Mode</mat-slide-toggle>
+  <button mat-button (click)="logout()">Logout</button>
+</mat-toolbar>
