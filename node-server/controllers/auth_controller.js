@@ -1,7 +1,6 @@
 const nodeMailer = require('nodemailer');
 const User = require('../model').User;
 const jwt = require('jsonwebtoken');
-const {secretKey} = require('../constant');
 
 // User Schema
 // {
@@ -20,7 +19,7 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({email, password}).exec();
     if (user) {
-      const token = jwt.sign({username: user.name}, secretKey, {expiresIn: 60 * 60 * 72});
+      const token = jwt.sign({username: user.name}, 'angular_taskmgr_jwttoken', {expiresIn: 60 * 60 * 72});
       return res.status(200).json({token: token, user: user});
     } else {
       return res.status(404).json({msg: 'username or password not correct'});

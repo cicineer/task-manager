@@ -8,6 +8,7 @@ const projectRouter = require('./routes/project');
 const authRouter = require('./routes/auth');
 const taskListRouter = require('./routes/task-list');
 const taskRouter = require('./routes/task');
+
 // mongoose configuration
 const mongoose = require('mongoose');
 //Set up default mongoose connection
