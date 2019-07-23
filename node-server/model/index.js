@@ -1,8 +1,8 @@
 const mongoose = require('mongoose'),
-  // get the built-in object id
-  ObjectId = mongoose.Types.ObjectId,
   // get the Schema of mongoose for creating newones
-  Schema = mongoose.Schema;
+  Schema = mongoose.Schema,
+  // get the built-in object id
+  ObjectId = Schema.Types.ObjectId;
 
 // User Schema section
 const UserSchema = new Schema({

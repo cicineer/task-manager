@@ -24,7 +24,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
-app.use(jwtAuth);
+// app.use(jwtAuth);
 
 app.use('/auth', authRouter);
 app.use('/users', userRouter);

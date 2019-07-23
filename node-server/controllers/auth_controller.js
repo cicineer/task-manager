@@ -33,6 +33,7 @@ exports.register = async (req, res) => {
   const userInfo = req.body.user;
   // console.log(userInfo);
   const existsName = await User.findOne({name: userInfo.name}).exec();
+  console.log(existsName);
   const existsEmail = await User.findOne({email: userInfo.email}).exec();
   if (existsName || existsEmail) {
     return res.status(401).json({msg: 'email or username has already been taken'})
