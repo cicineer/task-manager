@@ -1,4 +1,4 @@
-const User = require('../model').User;
+const User = require('../model/user_model').User;
 
 exports.getUsersByProjectId = async (req, res) => {
   const projectId = req.query.projectId;

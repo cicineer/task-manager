@@ -1,4 +1,4 @@
-const Task = require('../model').Task;
+const Task = require('../model/task_model').Task;
 
 // task schema
 // {

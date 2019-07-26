@@ -1,5 +1,5 @@
 const nodeMailer = require('nodemailer');
-const User = require('../model').User;
+const { findUser, findUserAndUpdate, saveUser } = require('../model/user_model');
 const jwt = require('jsonwebtoken');
 
 // User Schema
@@ -17,7 +17,7 @@ exports.login = async (req, res) => {
   const email = req.body.params.email;
   const password = req.body.params.password;
   try {
-    const user = await User.findOne({email, password}).exec();
+    const user = await findUser({email, password});
     if (user) {
       const token = jwt.sign({username: user.name}, 'angular_taskmgr_jwttoken', {expiresIn: 60 * 60 * 72});
       return res.status(200).json({token: token, user: user});
@@ -31,34 +31,39 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
   const userInfo = req.body.user;
-  // console.log(userInfo);
-  const existsName = await User.findOne({name: userInfo.name}).exec();
-  console.log(existsName);
-  const existsEmail = await User.findOne({email: userInfo.email}).exec();
-  if (existsName || existsEmail) {
-    return res.status(401).json({msg: 'email or username has already been taken'})
-  } else {
-    const newUser = new User({
-      email: userInfo.email,
-      name: userInfo.name,
-      password: userInfo.password,
-      dateOfBirth: userInfo.dateOfBirth,
-      avatar: userInfo.avatar
-    });
-    try {
-      const user = await newUser.save();
-      return res.status(200).json(user)
-    } catch (e) {
-      return res.status(401).json(e);
+  let userExistsOfName;
+  let userExistsOfEmail;
+  try {
+    userExistsOfName = await findUser({name: userInfo.name});
+    userExistsOfEmail = await findUser({email: userInfo.email});
+    // [existName, existEmail] = await Promise.all([
+    //   await findOne({name: userInfo.name}),
+    //   await findOne({email: userInfo.email})
+    // ]);
+    if (userExistsOfEmail || userExistsOfName) {
+      return res.json('user existing')
+    } else {
+      const newUser = {
+        email: userInfo.email,
+        name: userInfo.name,
+        password: userInfo.password,
+        dateOfBirth: userInfo.dateOfBirth,
+        avatar: userInfo.avatar
+      };
+      const savedUser = await saveUser(newUser);
+      return res.status(200).json(savedUser);
     }
+  } catch (e) {
+    return res.json(e);
   }
+
 };
 
 exports.reset = async (req, res) => {
-  const userId = req.body.userModel.userId;
-  const password = req.body.userModel.password;
+  const userId = req.body.userId;
+  const password = req.body.password;
   try {
-    const user = await User.findOneAndUpdate({_id: userId}, {password: password}).exec();
+    const user = await findUserAndUpdate({_id: userId}, {password: password});
     return res.status(200).json(user)
   } catch (e) {
     return res.status(401).json(e);
@@ -68,7 +73,7 @@ exports.reset = async (req, res) => {
 exports.forget = async (req, res) => {
   const email = req.body.email;
   try {
-    const user = await User.findOne({email: email}).exec();
+    const user = await findUser({email: email});
     if (user) {
       const transporter = nodeMailer.createTransport({
         service: 'gmail',
@@ -104,3 +109,6 @@ exports.forget = async (req, res) => {
     return res.status(401).json(e);
   }
 };
+
+
+

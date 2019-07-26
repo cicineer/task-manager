@@ -1,4 +1,4 @@
-const TaskList = require('../model').TaskList;
+const TaskList = require('../model/task-list_model').TaskList;
 
 // TaskList Schema
 // {
