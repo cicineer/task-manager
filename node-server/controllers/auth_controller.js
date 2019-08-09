@@ -14,8 +14,7 @@ const jwt = require('jsonwebtoken');
 // }
 
 exports.login = async (req, res) => {
-  const email = req.body.params.email;
-  const password = req.body.params.password;
+  const { email, password } = req.body.params;
   try {
     const user = await findUser({email, password});
     if (user) {
