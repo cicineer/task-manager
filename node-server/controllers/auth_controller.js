@@ -1,6 +1,14 @@
+/**
+ * status code: -10 not authenticated email or password is missing from the request body
+ * status code: -20 not authenticated no user matching the provided email and password
+ * status code: 1 successful responses
+ */
+
 const nodeMailer = require('nodemailer');
-const { findUser, findUserAndUpdate, saveUser } = require('../model/user_model');
+const {findUserAndUpdate, saveUser} = require('../model/user_model');
 const jwt = require('jsonwebtoken');
+const userModel = require('../model/user_model');
+
 
 // User Schema
 // {
@@ -14,17 +22,26 @@ const jwt = require('jsonwebtoken');
 // }
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body.params;
-  try {
-    const user = await findUser({email, password});
-    if (user) {
-      const token = jwt.sign({username: user.name}, 'angular_taskmgr_jwttoken', {expiresIn: 60 * 60 * 72});
-      return res.status(200).json({token: token, user: user});
-    } else {
-      return res.status(404).json({msg: 'username or password not correct'});
+  const {email, password} = req.body.params;
+  if (email && password) {
+    try {
+      const user = await userModel.findUser({email, password});
+      if (user) {
+        const token = jwt.sign({username: user.name}, 'angular_taskmgr_jwttoken', {expiresIn: 60 * 60 * 72});
+        console.log(token);
+        return res.status(200).json({
+          message: 'user found', data: {
+            token: token, user: user, statusCode: 1
+          }
+        });
+      } else {
+        return res.status(401).json({message: 'no user found', data: {statusCode: -20}});
+      }
+    } catch (e) {
+      return res.status(401).json(e)
     }
-  } catch (e) {
-    return res.status(401).json(e)
+  } else {
+    return res.status(401).json({message: 'email or password missing', data: {statusCode: -10}})
   }
 };
 
@@ -33,8 +50,8 @@ exports.register = async (req, res) => {
   let userExistsOfName;
   let userExistsOfEmail;
   try {
-    userExistsOfName = await findUser({name: userInfo.name});
-    userExistsOfEmail = await findUser({email: userInfo.email});
+    userExistsOfName = await userModel.findUser({name: userInfo.name});
+    userExistsOfEmail = await userModel.findUser({email: userInfo.email});
     // [existName, existEmail] = await Promise.all([
     //   await findOne({name: userInfo.name}),
     //   await findOne({email: userInfo.email})
