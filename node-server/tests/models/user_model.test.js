@@ -9,7 +9,7 @@ let UserProtoMock;
 
 const mockInit = function () {
   UserMock = sinon.mock(User);
-  UserProtoMock = sinon.mock(User);
+  UserProtoMock = sinon.mock(User.prototype);
 };
 
 const mockRestore = function () {
@@ -65,54 +65,30 @@ describe('UserModel -> find user', function () {
 
 });
 
+describe('UserModel -> save user', function () {
 
-// describe('UserModel -> update a user', function () {
-//
-//   beforeEach(mockInit);
-//   afterEach(mockRestore);
-//
-//   it('should save user', async () => {
-//     const expectedUser = user_model.tom;
-//     try {
-//       // const result = await saveUser(expectedUser);
-//       // sinon.assert.calledWith(User.prototype.save);
-//       UserProtoMock.expects('save').yields(null, expectedUser);
-//       // returned a promise from save user
-//       const result = await saveUser(expectedUser);
-//       expect(result).to.be.a('object');
-//       expect(result).to.have.property('name', expectedUser.name);
-//     } catch (e) {
-//       console.log(e)
-//     }
-//
-//   });
-//   it('should not save user when property missing', function () {
-//     const newUser = new User();
-//     newUser.validate(function (err) {
-//       expect(err.errors.name).to.exist;
-//     })
-//   });
-//
-//   it('should not save user when email already exists', async function () {
-//     const user = user_model.tom;
-//     const expectedEmail = user_model.tom.email;
-//     UserMock.expects('findOne').withArgs({email: expectedEmail}).chain('exec').yields(null, user);
-//     const result = await saveUser(user);
-//     console.log(result);
-//   });
-//
-//   it('should find this user by email', async function () {
-//     const expectedUser = user_model.tom;
-//     try {
-//       UserMock.expects('findOne').withArgs({name: expectedUser.email}).chain('exec').yields(null, expectedUser);
-//       const user = await checkExistEmail(expectedUser);
-//       // sinon.assert.calledWith(User.findOne, {name: expectedUser.name});
-//       expect(user).to.be.a('object');
-//       expect(user).to.have.property('name', expectedUser.name);
-//       expect(user).to.have.property('email', expectedUser.email)
-//     } catch (e) {
-//       console.log(e);
-//     }
-//   })
-// });
+  beforeEach(mockInit);
+  afterEach(mockRestore);
+
+  it('should throw a type arrow when no user passed', function () {
+    expect(() => saveUser()).to.throw(TypeError, 'user is not defined');
+  });
+
+  it('should throw an error when a required field of Schema is not present', function () {
+    // fields missing
+    const user = {
+      name: 'test user',
+      email: 'testuser@test.nl'
+    };
+    UserProtoMock.expects('save').yields(new Error('required fields are missing from user'));
+    try {
+      saveUser(user);
+      expect(saveUser(user)).to.throw();
+    } catch (e) {
+      // expect(e).to.be.an.instanceOf(Error).with.property('message', 'error find user: Error: something happens');
+    }
+  });
+
+});
+
 

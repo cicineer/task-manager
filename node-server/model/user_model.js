@@ -1,4 +1,4 @@
-const { mongoose, ObjectId, Schema } = require('../config/mongoose_constants');
+const {mongoose, ObjectId, Schema} = require('../config/mongoose_constants');
 
 // User Schema section
 const UserSchema = new Schema({
@@ -31,7 +31,9 @@ const findUser = (query) => {
     if (query instanceof Object) {
       if (Object.keys(query).length !== 0) {
         return User.findOne(query).exec(function (err, result) {
-          if (err) {throw new Error('error find user: ' + err)}
+          if (err) {
+            throw new Error('error find user: ' + err)
+          }
           return result;
         })
       } else {
@@ -47,17 +49,25 @@ const findUser = (query) => {
 
 const findUserAndUpdate = (query, update) => {
   return User.findOneAndUpdate(query, update).exec(function (err, result) {
-    if (err) {throw new Error('error find user and update: ' + err)}
+    if (err) {
+      throw new Error('error find user and update: ' + err)
+    }
     return result;
   })
 };
 
 const saveUser = (newUser) => {
-  const user = new User(newUser);
-  return user.save(function (err, result) {
-    if (err) {throw new Error('error save user: ' + err)}
-    return result;
-  })
+  if (newUser) {
+    const user = new User(newUser);
+    user.save((err, user) => {
+      if (err) {
+        throw ('user not created: ' + err);
+      }
+      return user;
+    });
+  } else {
+    throw new TypeError('user is not defined');
+  }
 };
 
 module.exports = {findUser, findUserAndUpdate, saveUser, User};
