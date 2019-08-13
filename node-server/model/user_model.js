@@ -48,20 +48,32 @@ const findUser = (query) => {
 };
 
 const findUserAndUpdate = (query, update) => {
-  return User.findOneAndUpdate(query, update).exec(function (err, result) {
-    if (err) {
-      throw new Error('error find user and update: ' + err)
+  if (query) {
+    if (query instanceof Object) {
+      if (Object.keys(query).length !== 0) {
+        return User.findOneAndUpdate(query, update, {new: true}).exec(function (err, result) {
+          if (err) {
+            throw new Error('error find user and update: ' + err)
+          }
+          return result;
+        })
+      } else {
+        throw new Error('query is empty')
+      }
+    } else {
+      throw new TypeError('not a query object');
     }
-    return result;
-  })
+  } else {
+    throw new ReferenceError('no query specified')
+  }
 };
 
 const saveUser = (newUser) => {
   if (newUser) {
     const user = new User(newUser);
-    user.save((err, user) => {
+    return user.save((err, user) => {
       if (err) {
-        throw ('user not created: ' + err);
+        throw new Error('user not created: ' + err);
       }
       return user;
     });
