@@ -69,6 +69,7 @@ const findUserAndUpdate = (query, update) => {
 };
 
 const saveUser = (newUser) => {
+  console.log(newUser);
   if (newUser) {
     const user = new User(newUser);
     return user.save((err, user) => {

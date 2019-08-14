@@ -139,6 +139,16 @@ describe('UserModel -> update user', function () {
     expect(() => findUserAndUpdate({})).to.throw('query is empty');
   });
 
+  it('should not update a user and return undefined when an email is not found', async function () {
+    const notExistingEmail = 'not an email',
+      updatedEmail = 'tom_updated@task-manager.com';
+    UserMock.expects('findOneAndUpdate').withArgs({email: notExistingEmail}, {email: updatedEmail}, {new: true})
+      .chain('exec').yields(null, undefined);
+    const user = await findUserAndUpdate({email: notExistingEmail}, {email: updatedEmail});
+    UserMock.verify();
+    expect(user).to.be.a('undefined')
+  });
+
   it('should find update a user when an email is found', async function () {
     const expectedEmail = user_model.tom.email,
       updatedEmail = 'tom_updated@task-manager.com';
@@ -153,15 +163,6 @@ describe('UserModel -> update user', function () {
     expect(user).to.have.property('email', updatedEmail);
   });
 
-  it('should not update a user when an email is not found', async function () {
-    const notExistingEmail = 'not an email',
-      updatedEmail = 'tom_updated@task-manager.com';
-    UserMock.expects('findOneAndUpdate').withArgs({email: notExistingEmail}, {email: updatedEmail}, {new: true})
-      .chain('exec').yields(null, undefined);
-    const user = await findUserAndUpdate({email: notExistingEmail}, {email: updatedEmail});
-    UserMock.verify();
-    expect(user).to.be.a('undefined')
-  });
 });
 
 

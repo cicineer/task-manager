@@ -1,12 +1,14 @@
 /**
- * status code: -10 not authenticated email or password is missing from the request body
- * status code: -30 no email and password provided to the request body
+ * status code: -10 missing required fields from the request body
  * status code: -20 not authenticated no user matching the provided email and password
+ * status code: -30 no data from the request
+ * status code: -40 duplicated data
+ * status code: -1 thrown error
  * status code: 1 successful responses
  */
 
 const nodeMailer = require('nodemailer');
-const {findUserAndUpdate, saveUser} = require('../model/user_model');
+const {findUserAndUpdate} = require('../model/user_model');
 const jwt = require('jsonwebtoken');
 const userModel = require('../model/user_model');
 
@@ -50,43 +52,60 @@ exports.login = async (req, res) => {
 };
 
 exports.register = async (req, res) => {
-  const userInfo = req.body.user;
-  let userExistsOfName;
-  let userExistsOfEmail;
-  try {
-    userExistsOfName = await userModel.findUser({name: userInfo.name});
-    userExistsOfEmail = await userModel.findUser({email: userInfo.email});
-    // [existName, existEmail] = await Promise.all([
-    //   await findOne({name: userInfo.name}),
-    //   await findOne({email: userInfo.email})
-    // ]);
-    if (userExistsOfEmail || userExistsOfName) {
-      return res.json('user existing')
+  if (req.body.user) {
+    const userInfo = req.body.user;
+    const {email, name, password, dateOfBirth, avatar} = userInfo;
+    if (email && name && password && dateOfBirth && avatar) {
+      let userExistsOfName;
+      let userExistsOfEmail;
+      try {
+        // userExistsOfName = await userModel.findUser({name: userInfo.name});
+        // userExistsOfEmail = await userModel.findUser({email: userInfo.email});
+        [userExistsOfName, userExistsOfEmail] = await Promise.all([
+          await userModel.findUser({name: userInfo.name}),
+          await userModel.findUser({email: userInfo.email})
+        ]);
+        if (userExistsOfEmail || userExistsOfName) {
+          return res.status(401).json({message: 'user already exists', data: {statusCode: -40}})
+        } else {
+          const newUser = {
+            email: userInfo.email,
+            name: userInfo.name,
+            password: userInfo.password,
+            dateOfBirth: userInfo.dateOfBirth,
+            avatar: userInfo.avatar
+          };
+          // important to sync with the test otherwise the test will fail
+          const savedUser = await userModel.saveUser(newUser);
+          return res.status(200).json({message: 'user created', data: {user: savedUser, statusCode: 1}});
+        }
+      } catch (e) {
+        return res.status(401).json({message: 'Error', data: {errorMessage: e.toString(), statusCode: -1}});
+      }
     } else {
-      const newUser = {
-        email: userInfo.email,
-        name: userInfo.name,
-        password: userInfo.password,
-        dateOfBirth: userInfo.dateOfBirth,
-        avatar: userInfo.avatar
-      };
-      const savedUser = await saveUser(newUser);
-      return res.status(200).json(savedUser);
+      return res.status(401).json({message: 'missing required property', data: {statusCode: -10}})
     }
-  } catch (e) {
-    return res.json(e);
+  } else {
+    return res.status(401).json({message: 'no user data is provided', data: {statusCode: -30}})
   }
-
 };
 
 exports.reset = async (req, res) => {
-  const userId = req.body.userId;
-  const password = req.body.password;
-  try {
-    const user = await findUserAndUpdate({_id: userId}, {password: password});
-    return res.status(200).json(user)
-  } catch (e) {
-    return res.status(401).json(e);
+  const {userId, password} = req.body;
+  if (userId && password) {
+    try {
+      const foundUser = await userModel.findUser({_id: userId});
+      if (foundUser) {
+        const user = await userModel.findUserAndUpdate({_id: userId}, {password: password});
+        return res.status(200).json({message: 'password has been reset', data: {user: user, statusCode: 1}})
+      } else {
+        return res.status(401).json({message: 'user does not exist with given ID', data: {statusCode: -20}})
+      }
+    } catch (e) {
+      return res.status(401).json({message: 'Error', data: {errorMessage: e.toString(), statusCode: -1}});
+    }
+  } else {
+    return res.status(401).json({message: 'no data is provided to reset password', data: {statusCode: -30}})
   }
 };
 
